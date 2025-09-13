@@ -1,0 +1,10 @@
+- name: Basic setup
+  hosts:
+    - servers
+    - nodes
+  gather_facts: false
+  vars:
+    # Server
+    server_custom_packages: []
+  roles:
+    - server

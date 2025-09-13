@@ -1,0 +1,6 @@
+server_default_packages:
+  - unzip
+server_custom_packages: []
+server_custom_pip_packages: []
+
+server_hostname: "{{ inventory_hostname }}"

@@ -1,0 +1,21 @@
+- name: Server | gather general facts
+  become: true
+  ansible.builtin.gather_facts:
+  tags:
+    - server
+
+- name: Server | import host settings apply
+  become: true
+  ansible.builtin.import_tasks:
+    file: host.yml
+  tags:
+    - server
+    - server_host
+
+- name: Server | import packages install
+  become: true
+  ansible.builtin.import_tasks:
+    file: packages.yml
+  tags:
+    - server
+    - server_packages

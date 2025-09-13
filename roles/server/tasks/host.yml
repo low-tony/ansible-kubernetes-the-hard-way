@@ -1,0 +1,19 @@
+- name: Server | host | get all hosts variables
+  ansible.builtin.set_fact:
+    server_included_groups: "{{ groups.keys() | difference(['all', 'ungrouped']) }}"
+
+- name: Server | host | set hostname
+  ansible.builtin.hostname:
+    name: "{{ server_hostname }}"
+
+- name: Server | host | update /etc/hosts file
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: >
+      {{ hostvars[item].server_hosts_file_ip | default('127.0.0.1') }}
+      {{ hostvars[item].server_hostname | default(inventory_hostname) }}
+      {% if hostvars[item].server_domain is defined -%}
+      {{ hostvars[item].server_hostname | default(inventory_hostname) }}.{{ hostvars[item].server_domain }}
+      {% endif %}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+  loop: "{{ server_included_groups | map('extract', groups) | flatten }}"

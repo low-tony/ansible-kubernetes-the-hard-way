@@ -1,0 +1,23 @@
+- name: Server | packages | install default
+  ansible.builtin.package:
+    name: "{{ server_default_packages }}"
+    state: present
+    update_cache: true
+
+- name: Server | packages | install custom
+  ansible.builtin.package:
+    name: "{{ server_custom_packages | default([]) }}"
+    state: present
+    update_cache: true
+
+- name: Server | package | check if pip is installed
+  ansible.builtin.command: which pip3
+  register: _server_pip_check
+  failed_when: false
+  changed_when: false
+
+- name: Server | packages | install custom pip
+  become: false
+  ansible.builtin.pip:
+    name: "{{ server_custom_pip_packahges | default([]) }}"
+  when: _server_pip_check.rc == 0

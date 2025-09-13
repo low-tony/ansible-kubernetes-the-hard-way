@@ -1,0 +1,65 @@
+servers:
+  hosts:
+    server-0:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20010
+      # Roles vars
+      server_hostname: server-0
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.10
+    server-1:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20011
+      # Roles vars
+      server_hostname: server-1
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.11
+    server-2:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20012
+      # Roles vars
+      server_hostname: server-2
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.12
+
+nodes:
+  hosts:
+    node-0:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20020
+      # Roles vars
+      server_hostname: node-0
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.20
+    node-1:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20021
+      # Roles vars
+      server_hostname: node-1
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.21
+    node-2:
+      ansible_connection: ssh
+      ansible_host: localhost
+      ansible_user: vagrant
+      ansible_host_key_checking: false
+      ansible_port: 20022
+      # Roles vars
+      server_hostname: node-2
+      server_domain: kubernetes.local
+      server_hosts_file_ip: 192.168.56.22
