@@ -10,7 +10,7 @@
   ansible.builtin.blockinfile:
     path: /etc/hosts
     block: >
-      {{ hostvars[item].server_hosts_file_ip | default('127.0.0.1') }}
+      {{ hostvars[item].server_ip | default('127.0.0.1') }}
       {{ hostvars[item].server_hostname | default(inventory_hostname) }}
       {% if hostvars[item].server_domain is defined -%}
       {{ hostvars[item].server_hostname | default(inventory_hostname) }}.{{ hostvars[item].server_domain }}
