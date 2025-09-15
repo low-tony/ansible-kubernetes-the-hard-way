@@ -36,6 +36,14 @@
         + (groups['servers'] | map('extract', hostvars, 'server_hostname') | list)
       }}
 
+- name: Certificates | variables | dynamically generate the ip records list
+  ansible.builtin.set_fact:
+    certificates_api_server_ips: >-
+      {{
+        certificates_api_server_ips | default([]) + (['IP:' ~ hostvars[item]['server_ip']])
+      }}
+  loop: "{{ groups['servers'] }}"
+
 - name: Certificates | variables | combine next DNS number and hostnames
   ansible.builtin.set_fact:
     certificates_api_server_alt_dns_records: >-
@@ -51,6 +59,6 @@
       {{
         certificates_kube_api_server_template |
         combine({
-          'subject_alt_name': certificates_kube_api_server_template.subject_alt_name + certificates_api_server_alt_dns_records
+          'subject_alt_name': certificates_kube_api_server_template.subject_alt_name + certificates_api_server_alt_dns_records + certificates_api_server_ips
         }, recursive=True)
       }}

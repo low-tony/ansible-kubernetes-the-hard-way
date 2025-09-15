@@ -2,7 +2,7 @@ certificates_kubernetes_cluster:
   domain: kubernetes.local
   endpoint: server
 
-certificates_location: "{{ role_path }}/files"
+certificates_location: "{{ playbook_dir }}/files"
 certificates_distinguished_name:
   C: US
   ST: Washington
