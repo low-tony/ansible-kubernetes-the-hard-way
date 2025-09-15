@@ -1,0 +1,56 @@
+# Worker nodes
+- name: Certificates | variables | create worker node variables
+  ansible.builtin.set_fact:
+    certificates_workers: >-
+      {{
+        certificates_workers | default({}) |
+        combine({
+          item: (
+            certificates_worker_template |
+            combine({
+              'name': hostvars[item].server_hostname,
+              'subject_alt_name': [
+                'DNS:' + hostvars[item].server_hostname,
+                'IP:127.0.0.1'
+              ],
+              'distinguished_name': (
+                certificates_worker_template.distinguished_name |
+                combine({
+                  'CN': 'system:node:' + hostvars[item].server_hostname
+                })
+              )
+            }, recursive=True)
+          )
+        })
+      }}
+  loop: "{{ groups['nodes'] }}"
+
+# Server API nodes
+- name: Certificates | variables | dynamically generate the DNS records list
+  ansible.builtin.set_fact:
+    certificates_api_server_dns_records: >-
+      {{
+        (groups['servers'] | map('extract', hostvars, 'server_hostname')
+        | zip([certificates_kubernetes_cluster.domain] * (groups['servers'] | length))
+        | map('join', '.') | list)
+        + (groups['servers'] | map('extract', hostvars, 'server_hostname') | list)
+      }}
+
+- name: Certificates | variables | combine next DNS number and hostnames
+  ansible.builtin.set_fact:
+    certificates_api_server_alt_dns_records: >-
+      {{
+        certificates_api_server_alt_dns_records | default([]) +
+        [ 'DNS:' ~ item ]
+      }}
+  loop: "{{ certificates_api_server_dns_records }}"
+
+- name: Certificates | variables | combine next DNS number and hostnames
+  ansible.builtin.set_fact:
+    certificates_kube_api_servers: >-
+      {{
+        certificates_kube_api_server_template |
+        combine({
+          'subject_alt_name': certificates_kube_api_server_template.subject_alt_name + certificates_api_server_alt_dns_records
+        }, recursive=True)
+      }}

@@ -1,0 +1,126 @@
+certificates_kubernetes_cluster:
+  domain: kubernetes.local
+  endpoint: server
+
+certificates_location: "{{ role_path }}/files"
+certificates_distinguished_name:
+  C: US
+  ST: Washington
+  L: Seattle
+
+certificates_root:
+  name: ca
+  size: 4096
+  # CSR
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    CN: CA
+  basic_constraints:
+    - CA:TRUE
+  key_usage:
+    - cRLSign
+    - keyCertSign
+  digest: sha512
+  # CRT
+  selfsigned_not_after: "+3653d"
+  selfsigned_create_subject_key_identifier: create_if_not_provided
+  selfsigned_digest: sha512
+
+certificates_admin:
+  name: admin
+  # CSR
+  distinguished_name:
+    CN: admin
+    O: system:masters
+  extended_key_usage:
+    - clientAuth
+
+certificates_service_accounts:
+  name: service-accounts
+  # CSR
+  distinguished_name:
+    CN: service-accounts
+  extended_key_usage:
+    - clientAuth
+
+certificates_kube_proxy:
+  name: kube-proxy
+  extended_key_usage:
+    - clientAuth
+    - serverAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    O: system:node-proxier
+    CN: system:kube-proxy
+  subject_alt_name:
+    - DNS:kube-proxy
+    - IP:127.0.0.1
+
+certificates_controller_manager:
+  name: kube-controller-manager
+  extended_key_usage:
+    - clientAuth
+    - serverAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    O: system:kube-controller-manager
+    CN: system:kube-controller-manager
+  subject_alt_name:
+    - DNS:kube-controller-manager
+    - IP:127.0.0.1
+
+certificates_kube_scheduler:
+  name: kube-scheduler
+  extended_key_usage:
+    - clientAuth
+    - serverAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    O: system:system:kube-scheduler
+    CN: system:kube-scheduler
+  subject_alt_name:
+    - DNS:kube-scheduler
+    - IP:127.0.0.1
+
+certificates_worker_template:
+  extended_key_usage:
+    - clientAuth
+    - serverAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    O: system:nodes
+    # CN:               will be added dynamically
+  # subject_alt_name:   will be added dynamically
+  # name:               will be added dynamically
+
+certificates_kube_api_server_template:
+  name: kube-api-server
+  extended_key_usage:
+    - clientAuth
+    - serverAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    CN: system:kubernetes
+  subject_alt_name:
+    - IP:127.0.0.1
+    - IP:10.32.0.1
+    - DNS:kubernetes
+    - DNS:kubernetes.default
+    - DNS:kubernetes.default.svc
+    - DNS:kubernetes.default.svc.cluster
+    - DNS:kubernetes.svc.cluster.local
+    - DNS:{{ certificates_kubernetes_cluster.endpoint }}.{{ certificates_kubernetes_cluster.domain }}
+    - DNS:api-server.{{ certificates_kubernetes_cluster.domain }}
+    # - DNS: nodes hostnames will be added dynamically

@@ -6,5 +6,10 @@
   vars:
     # Server
     server_custom_packages: []
+    # Certificates
+    certificates_kubernetes_cluster:
+      domain: kubernetes.local
+      endpoint: server
   roles:
     - server
+    - certificates

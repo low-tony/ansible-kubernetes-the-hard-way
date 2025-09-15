@@ -1,0 +1,55 @@
+- name: Certificates | components | flush CSR pipe variable {{ component.name }}
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    _certificates_csr_pipe: ""
+  tags:
+    - certificates
+
+- name: Certificates | components | generate private CA key - {{ component.name }}
+  delegate_to: localhost
+  community.crypto.openssl_privatekey:
+    path: "{{ certificates_location }}/{{ component.name }}.key"
+    size: 4096
+    type: RSA
+    mode: '0600'
+  tags:
+    - certificates
+
+- name: Certificates | components | run CSR pipe - {{ component.name }}
+  delegate_to: localhost
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ certificates_location }}/{{ component.name }}.key"
+    common_name: "{{ component.distinguished_name.CN | default(omit) }}"
+    organization_name: "{{ component.distinguished_name.O | default(omit) }}"
+    country_name: "{{ component.distinguished_name.C | default(omit) }}"
+    state_or_province_name: "{{ component.distinguished_name.ST | default(omit) }}"
+    locality_name: "{{ component.distinguished_name.L | default(omit) }}"
+    extended_key_usage: "{{ component.extended_key_usage | default(omit) }}"
+    subject_alt_name: "{{ component.subject_alt_name | default(omit) }}"
+    basicConstraints:
+      - CA:FALSE
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
+    key_usage_critical: true
+    create_subject_key_identifier: true
+    digest: sha256
+  register: _certificates_csr_pipe
+  tags:
+    - certificates
+
+- name: Certificates | components | generate CRT cert - {{ component.name }}
+  delegate_to: localhost
+  community.crypto.x509_certificate:
+    csr_content: "{{ _certificates_csr_pipe.csr }}"
+    path: "{{ certificates_location }}/{{ component.name }}.crt"
+    privatekey_path: "{{ certificates_location }}/{{ component.name }}.key"
+    ownca_path: "{{ certificates_location }}/{{ certificates_root.name }}.crt"
+    ownca_privatekey_path: "{{ certificates_location }}/{{ certificates_root.name }}.key"
+    provider: ownca
+    ownca_not_after: "+3653d"
+    ownca_create_subject_key_identifier: create_if_not_provided
+    ownca_digest: sha256
+    state: present
+  tags:
+    - certificates

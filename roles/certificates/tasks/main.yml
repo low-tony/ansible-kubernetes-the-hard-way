@@ -1,0 +1,35 @@
+- name: Certificates | import variables render
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.import_tasks:
+    file: variables.yml
+  tags:
+    - certificates
+
+- name: Certificates | import root certificates creation
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.import_tasks:
+    file: root.yml
+  tags:
+    - certificates
+
+- name: Certificates | include components certificates creation
+  run_once: true
+  ansible.builtin.include_tasks:
+    file: components.yml
+  loop_control:
+    loop_var: component
+  loop: >
+    {{
+      [certificates_admin,
+       certificates_service_accounts,
+       certificates_kube_proxy,
+       certificates_kube_api_servers,
+       certificates_controller_manager,
+       certificates_kube_scheduler
+       ]
+      + (certificates_workers.values() | list)
+    }}
+  tags:
+    - certificates

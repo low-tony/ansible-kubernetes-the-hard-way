@@ -1,0 +1,31 @@
+# root CA
+- name: Certificates | root | generate private CA key
+  community.crypto.openssl_privatekey:
+    path: "{{ certificates_location }}/{{ certificates_root.name }}.key"
+    size: "{{ certificates_root.size }}"
+    type: RSA
+    mode: '0600'
+  run_once: true
+
+- name: Certificates | root | cenerate root CSR pipe
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ certificates_location }}/{{ certificates_root.name }}.key"
+    common_name: "{{ certificates_root.distinguished_name.CN }}"
+    country_name: "{{ certificates_root.distinguished_name.C }}"
+    state_or_province_name: "{{ certificates_root.distinguished_name.ST }}"
+    locality_name: "{{ certificates_root.distinguished_name.L }}"
+    basic_constraints: "{{ certificates_root.basic_constraints }}"
+    key_usage: "{{ certificates_root.key_usage }}"
+    digest: "{{ certificates_root.digest }}"
+  register: _certificates_root_csr
+
+- name: Certificates | root | generate root CRT cert
+  community.crypto.x509_certificate:
+    csr_content: "{{ _certificates_root_csr.csr }}"
+    path: "{{ certificates_location }}/{{ certificates_root.name }}.crt"
+    privatekey_path: "{{ certificates_location }}/{{ certificates_root.name }}.key"
+    provider: selfsigned
+    selfsigned_not_after: "{{ certificates_root.selfsigned_not_after }}"
+    selfsigned_create_subject_key_identifier: "{{ certificates_root.selfsigned_create_subject_key_identifier }}"
+    selfsigned_digest: "{{ certificates_root.selfsigned_digest }}"
+    state: present
