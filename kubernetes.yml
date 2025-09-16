@@ -1,11 +1,9 @@
 - name: Basic setup
   hosts:
     - servers
-    - nodes
+    - workers
   gather_facts: false
   vars:
-    # Server
-    server_custom_packages: []
     # Certificates
     certificates_kubernetes_cluster:
       domain: kubernetes.local

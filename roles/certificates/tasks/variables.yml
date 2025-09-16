@@ -23,7 +23,7 @@
           )
         })
       }}
-  loop: "{{ groups['nodes'] }}"
+  loop: "{{ groups['workers'] }}"
 
 # Server API nodes
 - name: Certificates | variables | dynamically generate the DNS records list

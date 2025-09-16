@@ -1,4 +1,3 @@
-# root CA
 - name: Certificates | root | generate private CA key
   community.crypto.openssl_privatekey:
     path: "{{ certificates_location }}/{{ certificates_root.name }}.key"

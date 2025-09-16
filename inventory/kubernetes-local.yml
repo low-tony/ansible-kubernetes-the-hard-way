@@ -31,7 +31,7 @@ servers:
       server_domain: kubernetes.local
       server_ip: 192.168.56.12
 
-nodes:
+workers:
   hosts:
     node-0:
       ansible_connection: ssh

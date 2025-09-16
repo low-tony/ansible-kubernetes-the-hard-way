@@ -1,4 +1,3 @@
 # Kubernetes certificates and files
-roles/certificates/files/**
 roles/kubernetes/files/**
 files/**
