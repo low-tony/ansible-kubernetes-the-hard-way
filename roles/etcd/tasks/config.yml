@@ -1,0 +1,29 @@
+- name: Etcd | configs | copy certificates
+  ansible.builtin.copy:
+    src: "{{ etcd_cerficates_folder }}/{{ item }}"
+    dest: "{{ etcd_settings.config_path }}"
+    mode: '0640'
+    owner: "{{ etcd_settings.user }}"
+    group: "{{ etcd_settings.group }}"
+  loop: "{{ etcd_certificates.kube_api.values() }}"
+
+- name: Etcd | configs | create variable with cluster nodes
+  ansible.builtin.set_fact:
+    etcd_cluster_nodes: >-
+      {{
+        etcd_cluster_nodes | default([]) + ([hostvars[item]['server_hostname'] ~ '=https://' ~ hostvars[item]['server_hostname'] ~ ':2380'])
+      }}
+  loop: "{{ groups['servers'] }}"
+
+- name: Etcd | configs | create system services
+  ansible.builtin.template:
+    src: etcd.service.j2
+    dest: "/etc/systemd/system/etcd.service"
+    mode: '644'
+
+- name: Etcd | configs | start service
+  ansible.builtin.systemd:
+    name: etcd
+    state: started
+    enabled: true
+    daemon_reload: true

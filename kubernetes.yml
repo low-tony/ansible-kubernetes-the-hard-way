@@ -11,3 +11,10 @@
   roles:
     - server
     - certificates
+
+- name: Install etcd
+  hosts:
+    - servers
+  gather_facts: false
+  roles:
+    - etcd

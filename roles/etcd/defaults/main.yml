@@ -1,0 +1,20 @@
+etcd_settings:
+  user: etcd
+  group: etcd
+  config_path: /etc/etcd
+  data_path: /var/lib/etcd
+  bin_path: /usr/local/bin
+
+etcd_cluster_name: kubernetes-local
+
+etcd_version: 3.6.4
+etcd_binaries_url: >-
+  https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{
+  etcd_version }}-{{ ansible_system | lower }}-{{ arch_map[ansible_architecture] }}.tar.gz
+
+etcd_cerficates_folder: "{{ playbook_dir }}/files"
+etcd_certificates:
+  kube_api:
+    ca: ca.crt
+    crt: kube-api-server.crt
+    key: kube-api-server.key

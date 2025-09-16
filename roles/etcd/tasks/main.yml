@@ -1,0 +1,29 @@
+- name: Etcd | gather facts
+  become: true
+  ansible.builtin.gather_facts:
+  tags:
+    - etcd
+    - etcd_install
+
+- name: Etcd | import user creation
+  become: true
+  ansible.builtin.import_tasks:
+    file: user.yml
+  tags:
+    - etcd
+    - etcd_install
+
+- name: Etcd | import install
+  ansible.builtin.import_tasks:
+    file: install.yml
+  tags:
+    - etcd
+    - etcd_install
+
+- name: Etcd | import config
+  become: true
+  ansible.builtin.import_tasks:
+    file: config.yml
+  tags:
+    - etcd
+    - etcd_config

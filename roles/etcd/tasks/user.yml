@@ -1,0 +1,10 @@
+- name: Etcd | user| create group
+  ansible.builtin.group:
+    name: "{{ etcd_settings.group }}"
+
+- name: Etcd | user | create user
+  ansible.builtin.user:
+    name: "{{ etcd_settings.user }}"
+    group: "{{ etcd_settings.group }}"
+    createhome: false
+    shell: /sbin/nologin

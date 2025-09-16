@@ -1,0 +1,54 @@
+- name: Etcd | install | be sure about cleaning temp files
+  block:
+    - name: Etcd | install | download the package
+      ansible.builtin.unarchive:
+        src: "{{ etcd_binaries_url }}"
+        dest: /tmp
+        remote_src: true
+
+    - name: Etcd | install | copy binaries
+      become: true
+      ansible.builtin.copy:
+        src: /tmp/etcd-v{{ etcd_version }}-{{ ansible_system | lower }}-{{ arch_map[ansible_architecture] | default(ansible_architecture) }}/{{ item }}
+        dest: "{{ etcd_settings.bin_path }}/{{ item }}"
+        mode: '755'
+        remote_src: true
+      loop:
+        - etcd
+        - etcdctl
+        - etcdutl
+
+  always:
+    - name: Etcd | install | find temp files to remove
+      ansible.builtin.find:
+        paths: /tmp
+        patterns:
+          - etcd*
+          - ansible*
+        file_type: directory
+        recurse: true
+      register: _etcd_temp_files
+
+    - name: Etcd | install | remove temp files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ _etcd_temp_files.files }}"
+
+- name: Etcd | install | config folder
+  become: true
+  ansible.builtin.file:
+    path: "{{ etcd_settings.config_path }}"
+    state: directory
+    mode: '0750'
+    owner: "{{ etcd_settings.user }}"
+    group: "{{ etcd_settings.group }}"
+
+- name: Etcd | install | data folder
+  become: true
+  ansible.builtin.file:
+    path: "{{ etcd_settings.data_path }}"
+    state: directory
+    mode: '700'
+    owner: "{{ etcd_settings.user }}"
+    group: "{{ etcd_settings.group }}"
