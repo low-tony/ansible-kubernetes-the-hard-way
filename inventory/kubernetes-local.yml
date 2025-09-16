@@ -9,7 +9,7 @@ servers:
       # Roles vars
       server_hostname: server-0
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.10
+      server_ip: 192.168.56.10
     server-1:
       ansible_connection: ssh
       ansible_host: localhost
@@ -19,7 +19,7 @@ servers:
       # Roles vars
       server_hostname: server-1
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.11
+      server_ip: 192.168.56.11
     server-2:
       ansible_connection: ssh
       ansible_host: localhost
@@ -29,7 +29,7 @@ servers:
       # Roles vars
       server_hostname: server-2
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.12
+      server_ip: 192.168.56.12
 
 nodes:
   hosts:
@@ -42,7 +42,7 @@ nodes:
       # Roles vars
       server_hostname: node-0
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.20
+      server_ip: 192.168.56.20
     node-1:
       ansible_connection: ssh
       ansible_host: localhost
@@ -52,7 +52,7 @@ nodes:
       # Roles vars
       server_hostname: node-1
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.21
+      server_ip: 192.168.56.21
     node-2:
       ansible_connection: ssh
       ansible_host: localhost
@@ -62,4 +62,4 @@ nodes:
       # Roles vars
       server_hostname: node-2
       server_domain: kubernetes.local
-      server_hosts_file_ip: 192.168.56.22
+      server_ip: 192.168.56.22
