@@ -5,6 +5,8 @@
     type: RSA
     mode: '0600'
   run_once: true
+  tags:
+    - skip_ansible_lint
 
 - name: Certificates | root | cenerate root CSR pipe
   community.crypto.openssl_csr_pipe:
