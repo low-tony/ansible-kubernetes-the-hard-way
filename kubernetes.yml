@@ -4,6 +4,9 @@
     - workers
   gather_facts: false
   vars:
+    # Server
+    server_hosts:
+      - 192.168.56.10 server.kubernetes.local
     # Certificates
     certificates_kubernetes_cluster:
       domain: kubernetes.local
