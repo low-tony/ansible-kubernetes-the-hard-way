@@ -24,6 +24,8 @@
 - name: Etcd | configs | start service
   ansible.builtin.systemd:
     name: etcd
-    state: started
+    state: restarted
     enabled: true
     daemon_reload: true
+  timeout: 180
+  retries: 3

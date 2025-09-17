@@ -4,6 +4,8 @@ Documentation=https://github.com/etcd-io/etcd
 After=network.target
 
 [Service]
+TimeoutStartSec=180
+
 Type=notify
 User={{ etcd_settings.user }}
 Group={{ etcd_settings.group }}
@@ -31,6 +33,7 @@ ExecStart={{ etcd_settings.bin_path }}/etcd \
 Restart=on-failure
 RestartSec=5
 LimitNOFILE=40000
+
 
 [Install]
 WantedBy=multi-user.target
