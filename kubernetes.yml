@@ -1,23 +1,27 @@
+- name: Certificates create
+  hosts: all
+  gather_facts: false
+  vars:
+    certificates_kubernetes_cluster:
+      domain: kubernetes.local
+      endpoint: server
+  roles:
+    - certificates
+
 - name: Basic setup
   hosts:
     - servers
     - workers
   gather_facts: false
   vars:
-    # Server
     server_hosts:
       - 192.168.56.10 server.kubernetes.local
-    # Certificates
-    certificates_kubernetes_cluster:
-      domain: kubernetes.local
-      endpoint: server
   roles:
     - server
-    - certificates
 
 - name: Install etcd
   hosts:
-    - servers
+    - etcd
   gather_facts: false
   roles:
     - etcd

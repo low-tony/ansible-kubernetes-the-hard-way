@@ -32,26 +32,19 @@
       {{
         (groups['servers'] | map('extract', hostvars, 'server_hostname')
         | zip([certificates_kubernetes_cluster.domain] * (groups['servers'] | length))
-        | map('join', '.') | list)
-        + (groups['servers'] | map('extract', hostvars, 'server_hostname') | list)
+        | map('join', '.') | list
+        + (groups['servers'] | map('extract', hostvars, 'server_hostname') | list))
+        | map('regex_replace', '^(.*)$', 'DNS:\1')
       }}
 
-- name: Certificates | variables | dynamically generate the ip records list
+- name: Certificates | variables | dynamically generate the IP records list
   ansible.builtin.set_fact:
     certificates_api_server_ips: >-
       {{
-        certificates_api_server_ips | default([]) + (['IP:' ~ hostvars[item]['server_ip']])
+        groups['servers']
+        | map('extract', hostvars, 'server_ip')
+        | map('regex_replace', '^(.*)$', 'IP:\1')
       }}
-  loop: "{{ groups['servers'] }}"
-
-- name: Certificates | variables | combine next DNS number and hostnames
-  ansible.builtin.set_fact:
-    certificates_api_server_alt_dns_records: >-
-      {{
-        certificates_api_server_alt_dns_records | default([]) +
-        [ 'DNS:' ~ item ]
-      }}
-  loop: "{{ certificates_api_server_dns_records }}"
 
 - name: Certificates | variables | combine next DNS number and hostnames
   ansible.builtin.set_fact:
@@ -59,6 +52,62 @@
       {{
         certificates_kube_api_server_template |
         combine({
-          'subject_alt_name': certificates_kube_api_server_template.subject_alt_name + certificates_api_server_alt_dns_records + certificates_api_server_ips
+          'subject_alt_name': certificates_kube_api_server_template.subject_alt_name + certificates_api_server_dns_records + certificates_api_server_ips
         }, recursive=True)
       }}
+
+# Etcd
+- name: Certificates | variables | dynamically generate the etcd servers certificates
+  ansible.builtin.set_fact:
+    certificates_etcd_servers: >-
+     {{
+        certificates_etcd_servers | default({}) |
+        combine({
+          item: (
+            certificates_etcd_server_template |
+            combine({
+              'name': 'etcd-server-' + hostvars[item].server_hostname,
+              'subject_alt_name': [
+                'DNS:' + hostvars[item].server_hostname,
+                'DNS:' + hostvars[item].server_hostname + '.' + certificates_kubernetes_cluster.domain,
+                'IP:127.0.0.1',
+                'IP:' + hostvars[item].server_ip
+              ],
+              'distinguished_name': (
+                certificates_etcd_server_template.distinguished_name | default({}) |
+                combine({
+                  'CN': hostvars[item].server_hostname
+                })
+              )
+            }, recursive=True)
+          )
+        })
+      }}
+  loop: "{{ groups['etcd'] }}"
+
+- name: Certificates | variables | dynamically generate the etcd peers certificates
+  ansible.builtin.set_fact:
+    certificates_etcd_peers: >-
+     {{
+        certificates_etcd_peers | default({}) |
+        combine({
+          item: (
+            certificates_etcd_peer_template |
+            combine({
+              'name': 'etcd-peer-' + hostvars[item].server_hostname,
+              'subject_alt_name': [
+                'DNS:' + hostvars[item].server_hostname,
+                'DNS:' + hostvars[item].server_hostname + '.' + certificates_kubernetes_cluster.domain,
+                'IP:' + hostvars[item].server_ip
+              ],
+              'distinguished_name': (
+                certificates_etcd_peer_template.distinguished_name | default({}) |
+                combine({
+                  'CN': hostvars[item].server_hostname
+                })
+              )
+            }, recursive=True)
+          )
+        })
+      }}
+  loop: "{{ groups['etcd'] }}"

@@ -27,9 +27,12 @@
        certificates_kube_proxy,
        certificates_kube_api_servers,
        certificates_controller_manager,
-       certificates_kube_scheduler
+       certificates_kube_scheduler,
+       certificates_etcd_kube_api
        ]
       + (certificates_workers.values() | list)
+      + (certificates_etcd_servers.values() | list )
+      + (certificates_etcd_peers.values() | list )
     }}
   tags:
     - certificates

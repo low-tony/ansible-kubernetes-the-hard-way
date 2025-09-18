@@ -21,19 +21,18 @@ ExecStart={{ etcd_settings.bin_path }}/etcd \
   --initial-cluster-state new \
   --data-dir={{ etcd_settings.data_path }} \
   --client-cert-auth \
-  --trusted-ca-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.ca }} \
-  --cert-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.crt }} \
-  --key-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.key }} \
+  --trusted-ca-file {{ etcd_settings.config_path }}/{{ etcd_certificates.ca }} \
+  --cert-file {{ etcd_settings.config_path }}/{{ etcd_certificates.server.crt }} \
+  --key-file {{ etcd_settings.config_path }}/{{ etcd_certificates.server.key }} \
   --peer-client-cert-auth \
-  --peer-trusted-ca-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.ca }} \
-  --peer-cert-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.crt }} \
-  --peer-key-file {{ etcd_settings.config_path }}/{{ etcd_certificates.kube_api.key }} \
+  --peer-trusted-ca-file {{ etcd_settings.config_path }}/{{ etcd_certificates.ca }} \
+  --peer-cert-file {{ etcd_settings.config_path }}/{{ etcd_certificates.peer.crt }} \
+  --peer-key-file {{ etcd_settings.config_path }}/{{ etcd_certificates.peer.key }} \
   --auto-compaction-retention 1
 
 Restart=on-failure
 RestartSec=5
 LimitNOFILE=40000
-
 
 [Install]
 WantedBy=multi-user.target

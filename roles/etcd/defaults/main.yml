@@ -14,7 +14,10 @@ etcd_binaries_url: >-
 
 etcd_cerficates_folder: "{{ playbook_dir }}/files"
 etcd_certificates:
-  kube_api:
-    ca: ca.crt
-    crt: kube-api-server.crt
-    key: kube-api-server.key
+  ca: ca.crt
+  server:
+    crt: "etcd-server-{{ server_hostname }}.crt"
+    key: "etcd-server-{{ server_hostname }}.key"
+  peer:
+    crt: "etcd-peer-{{ server_hostname }}.crt"
+    key: "etcd-peer-{{ server_hostname }}.key"

@@ -5,7 +5,12 @@
     mode: '0640'
     owner: "{{ etcd_settings.user }}"
     group: "{{ etcd_settings.group }}"
-  loop: "{{ etcd_certificates.kube_api.values() }}"
+  loop:
+    - "{{ etcd_certificates.server.key }}"
+    - "{{ etcd_certificates.server.crt }}"
+    - "{{ etcd_certificates.peer.key }}"
+    - "{{ etcd_certificates.peer.crt }}"
+    - "{{ etcd_certificates.ca }}"
 
 - name: Etcd | configs | create variable with cluster nodes
   ansible.builtin.set_fact:
