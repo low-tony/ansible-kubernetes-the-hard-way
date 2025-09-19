@@ -16,9 +16,11 @@
   ansible.builtin.set_fact:
     etcd_cluster_nodes: >-
       {{
-        etcd_cluster_nodes | default([]) + ([hostvars[item]['server_hostname'] ~ '=https://' ~ hostvars[item]['server_hostname'] ~ ':2380'])
+        groups['servers'] |
+        map('extract', hostvars, 'server_hostname') |
+        map('regex_replace', '^(.*)$', '\1=https://\1:2380') |
+        list
       }}
-  loop: "{{ groups['servers'] }}"
 
 - name: Etcd | configs | create system services
   ansible.builtin.template:
