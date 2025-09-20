@@ -92,6 +92,7 @@ certificates_kube_scheduler:
     - DNS:kube-scheduler
     - IP:127.0.0.1
 
+## Dynamic
 certificates_worker_template:
   extended_key_usage:
     - clientAuth
@@ -128,6 +129,18 @@ certificates_kube_api_server_template:
     # - DNS: nodes hostnames will be added dynamically
 
 # Etcd
+certificates_etcd_kube_api:
+  name: etcd-kube-api
+  extended_key_usage:
+    - clientAuth
+  distinguished_name:
+    C: "{{ certificates_distinguished_name.C }}"
+    ST: "{{ certificates_distinguished_name.ST }}"
+    L: "{{ certificates_distinguished_name.L }}"
+    O: system:masters
+    CN: kube-api-server
+
+## Dynamic
 certificates_etcd_server_template:
   name: etcd-server
   extended_key_usage:
@@ -150,14 +163,3 @@ certificates_etcd_peer_template:
     L: "{{ certificates_distinguished_name.L }}"
     O: system:etcd-peers
     # CN and subject_alt_name generated dynamically
-
-certificates_etcd_kube_api:
-  name: etcd-kube-api
-  extended_key_usage:
-    - clientAuth
-  distinguished_name:
-    C: "{{ certificates_distinguished_name.C }}"
-    ST: "{{ certificates_distinguished_name.ST }}"
-    L: "{{ certificates_distinguished_name.L }}"
-    O: system:masters
-    CN: kube-api-server

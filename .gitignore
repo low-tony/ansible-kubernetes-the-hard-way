@@ -1,3 +1,6 @@
+# MacOS
+.DS_Store
+
 # Kubernetes certificates and files
 roles/kubernetes/files/**
 files/**

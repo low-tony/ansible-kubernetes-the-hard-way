@@ -1,6 +1,6 @@
 - name: Server | gather general facts
   become: true
-  ansible.builtin.gather_facts:
+  ansible.builtin.setup:
   tags:
     - server
 

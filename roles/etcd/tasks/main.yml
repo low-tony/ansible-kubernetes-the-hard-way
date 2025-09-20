@@ -1,6 +1,6 @@
 - name: Etcd | gather facts
   become: true
-  ansible.builtin.gather_facts:
+  ansible.builtin.setup:
   tags:
     - etcd
     - etcd_install
