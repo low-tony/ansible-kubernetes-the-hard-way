@@ -1,0 +1,10 @@
+- name: Server | swap | disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: true
+  when: ansible_swaptotal_mb > 0
+
+- name: Server | swap | remove swap from fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: \sswap\s
+    state: absent

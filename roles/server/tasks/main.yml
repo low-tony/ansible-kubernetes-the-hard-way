@@ -3,6 +3,7 @@
   ansible.builtin.setup:
   tags:
     - server
+    - server_swap
 
 - name: Server | import host settings apply
   become: true
@@ -19,3 +20,11 @@
   tags:
     - server
     - server_packages
+
+- name: Server | import swap manipulations
+  become: true
+  ansible.builtin.import_tasks:
+    file: swap.yml
+  tags:
+    - server
+    - server_swap
