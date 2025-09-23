@@ -8,14 +8,28 @@
   roles:
     - certificates
 
-- name: Basic setup
+- name: Basic servers setup
   hosts:
     - servers
+  gather_facts: false
+  vars:
+    server_hosts:
+      - 192.168.56.10 server.kubernetes.local
+  roles:
+    - server
+
+- name: Basic workers setup
+  hosts:
     - workers
   gather_facts: false
   vars:
     server_hosts:
       - 192.168.56.10 server.kubernetes.local
+    server_custom_packages:
+      - socat
+      - conntrack
+      - ipset
+      - kmod
   roles:
     - server
 

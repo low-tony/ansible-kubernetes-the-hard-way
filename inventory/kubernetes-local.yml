@@ -1,3 +1,7 @@
+etcd:
+  children:
+    servers:
+
 servers:
   hosts:
     server_0:
@@ -63,7 +67,3 @@ workers:
       server_hostname: node-2
       server_domain: kubernetes.local
       server_ip: 192.168.56.22
-
-etcd:
-  children:
-    servers:
