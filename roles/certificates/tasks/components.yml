@@ -1,4 +1,4 @@
-- name: Certificates | components | flush CSR pipe variable {{ component.name }}
+- name: Certificates | components | flush CSR pipe variable - {{ component.name }}
   delegate_to: localhost
   ansible.builtin.set_fact:
     _certificates_csr_pipe: ""

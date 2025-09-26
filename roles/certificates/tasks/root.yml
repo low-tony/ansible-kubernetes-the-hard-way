@@ -16,6 +16,7 @@
     state_or_province_name: "{{ certificates_root.distinguished_name.ST }}"
     locality_name: "{{ certificates_root.distinguished_name.L }}"
     basic_constraints: "{{ certificates_root.basic_constraints }}"
+    basic_constraints_critical: true
     key_usage: "{{ certificates_root.key_usage }}"
     digest: "{{ certificates_root.digest }}"
   register: _certificates_root_csr
