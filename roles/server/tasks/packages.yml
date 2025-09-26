@@ -3,12 +3,14 @@
     name: "{{ server_default_packages }}"
     state: present
     update_cache: true
+  retries: 3
 
 - name: Server | packages | install custom
   ansible.builtin.package:
     name: "{{ server_custom_packages | default([]) }}"
     state: present
     update_cache: true
+  retries: 3
 
 - name: Server | package | check if pip is installed
   ansible.builtin.command: which pip3
@@ -21,3 +23,4 @@
   ansible.builtin.pip:
     name: "{{ server_custom_pip_packahges | default([]) }}"
   when: _server_pip_check.rc == 0
+  retries: 3

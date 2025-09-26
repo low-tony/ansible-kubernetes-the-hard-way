@@ -4,6 +4,7 @@
   tags:
     - server
     - server_swap
+    - server_routing
 
 - name: Server | import host settings apply
   become: true
