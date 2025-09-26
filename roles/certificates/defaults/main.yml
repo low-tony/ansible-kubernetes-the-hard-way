@@ -115,7 +115,8 @@ certificates_kube_api_server_template:
     C: "{{ certificates_distinguished_name.C }}"
     ST: "{{ certificates_distinguished_name.ST }}"
     L: "{{ certificates_distinguished_name.L }}"
-    CN: system:kubernetes
+    # CN: system:kubernetes
+    CN: kubernetes
   subject_alt_name:
     - IP:127.0.0.1
     - IP:10.32.0.1
