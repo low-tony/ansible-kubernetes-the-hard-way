@@ -1,0 +1,34 @@
+- name: Etcd | uninstall | reset systemd
+  ansible.builtin.command: systemctl reset-failed
+  tags:
+    - skip_ansible_lint
+
+- name: Etcd | uninstall | disable systemd unit
+  ansible.builtin.systemd:
+    name: etcd
+    state: stopped
+    enabled: false
+    daemon_reload: true
+    force: true
+    no_block: true
+  register: _etcd_service_result
+  failed_when: _etcd_service_result.failed and 'Could not find' not in _etcd_service_result.msg
+
+- name: Etcd | uninstall | remove files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/etcd.service
+    - "{{ etcd_settings.config_path }}"
+    - "{{ etcd_settings.data_path }}"
+    - "{{ etcd_settings.bin_path }}/etcd"
+
+- name: Etcd | uninstall | reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Etcd | uninstall | reset systemd
+  ansible.builtin.command: systemctl reset-failed
+  tags:
+    - skip_ansible_lint

@@ -27,3 +27,13 @@
   tags:
     - etcd
     - etcd_config
+
+- name: Etcd | import uninstall
+  become: true
+  ansible.builtin.import_tasks:
+    file: uninstall.yml
+  when: etcd_uninstall
+  tags:
+    - etcd
+    - etcd_install
+    - etcd_uninstall

@@ -5,6 +5,7 @@
         src: "{{ etcd_binaries_url }}"
         dest: /tmp
         remote_src: true
+      retries: 3
 
     - name: Etcd | install | copy binaries
       become: true
@@ -30,6 +31,7 @@
       register: _etcd_temp_files
 
     - name: Etcd | install | remove temp files
+      become: true
       ansible.builtin.file:
         path: "{{ item.path }}"
         state: absent
