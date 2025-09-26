@@ -1,0 +1,11 @@
+- name: Kubernetes | install servers | download components
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "/usr/local/bin/{{ item.split('/')[-1] }}"
+    mode: '0755'
+  loop:
+    - "{{ kubernetes_components_binaries_urls.kubectl }}"
+    - "{{ kubernetes_components_binaries_urls.kube_apiserver }}"
+    - "{{ kubernetes_components_binaries_urls.kube_controller_manager }}"
+    - "{{ kubernetes_components_binaries_urls.kube_scheduler }}"
+  retries: 3

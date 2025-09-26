@@ -1,0 +1,39 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-apiserver \
+  --allow-privileged=true \
+  --audit-log-maxage=30 \
+  --audit-log-maxbackup=3 \
+  --audit-log-maxsize=100 \
+  --audit-log-path=/var/log/audit.log \
+  --authorization-mode=Node,RBAC \
+  --bind-address=0.0.0.0 \
+  --secure-port={{ kubernetes_cluster.port }} \
+  --client-ca-file={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.ca.crt | basename }} \
+  --enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+  --etcd-servers={{ kubernetes_etcd_nodes | join(",") }} \
+  --etcd-cafile={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.ca.crt | basename }} \
+  --etcd-certfile={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.etcd_kube_api.crt | basename }} \
+  --etcd-keyfile={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.etcd_kube_api.key | basename }} \
+  --event-ttl=1h \
+  --encryption-provider-config={{ kubernetes_folders.api_server }}/encryption-config.yaml \
+  --kubelet-certificate-authority={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.ca.crt | basename }} \
+  --kubelet-client-certificate={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.kube_api_server.crt | basename }} \
+  --kubelet-client-key={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.kube_api_server.key | basename }} \
+  --runtime-config='api/all=true' \
+  --service-account-key-file={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.service_accounts.crt | basename }} \
+  --service-account-signing-key-file={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.service_accounts.key | basename }} \
+  --service-account-issuer=https://{{ kubernetes_cluster.endpoint }}.{{ kubernetes_cluster.domain }}:{{ kubernetes_cluster.port }} \
+  --service-node-port-range={{ kubernetes_cluster.ports }} \
+  --service-cluster-ip-range={{ kubernetes_cluster.service_cidr }} \
+  --tls-cert-file={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.kube_api_server.crt | basename }} \
+  --tls-private-key-file={{ kubernetes_folders.api_server }}/{{ kubernetes_certificates.kube_api_server.key | basename }} \
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

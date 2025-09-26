@@ -1,0 +1,128 @@
+- name: Kubernetes | config workers | create folders
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0750'
+  loop:
+    - "{{ kubernetes_folders.kube_proxy }}"
+    - "{{ kubernetes_folders.kubelet }}"
+    - "{{ kubernetes_folders.cni_plugins_config }}"
+    - "{{ kubernetes_folders.run }}"
+    - "{{ kubernetes_folders.api_server }}"
+    - "{{ kubernetes_folders.containerd }}"
+
+# Certificates
+- name: Kubernetes | config servers | copy certificates
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_folders.kubelet }}"
+    mode: '0640'
+  loop:
+    - "{{ kubernetes_certificates.ca.crt }}"
+    - "{{ kubernetes_certificates_location }}/{{ server_hostname }}.crt"
+    - "{{ kubernetes_certificates_location }}/{{ server_hostname }}.key"
+
+# Kubernetes configs
+- name: Kubernetes | configs workers | kubelet kubeconfigs
+  ansible.builtin.template:
+    src: kubeconfig.j2
+    dest: "{{ kubernetes_folders.kubelet }}/kubeconfig"
+    mode: '0644'
+  loop: "{{ kubernetes_components_nodes | dict2items }}"
+  when: server_hostname == item.key
+
+- name: Kubernetes | configs workers | kube-proxy kubeconfigs
+  ansible.builtin.template:
+    src: kubeconfig.j2
+    dest: "{{ kubernetes_folders.kube_proxy }}/kubeconfig"
+    mode: '644'
+  loop: "{{ kubernetes_components_internal | dict2items }}"
+  when: item.value.name == 'kube-proxy'
+
+- name: Kubernetes | configs workers | kubelet
+  ansible.builtin.template:
+    src: kubelet-config.yaml.j2
+    dest: "{{ kubernetes_folders.kubelet }}/kubelet-config.yaml"
+    mode: '0644'
+
+- name: Kubernetes | configs workers | kube-proxy
+  ansible.builtin.template:
+    src: kube-proxy-config.yaml.j2
+    dest: "{{ kubernetes_folders.kube_proxy }}/kube-proxy-config.yaml"
+    mode: '0644'
+
+# CNI Networking
+- name: Kubernetes | configs workers | bridge network configuration
+  ansible.builtin.template:
+    src: 10-bridge.conf.j2
+    dest: "{{ kubernetes_folders.cni_plugins_config }}/10-bridge.conf"
+    mode: '0640'
+  loop: "{{ kubernetes_components_nodes | dict2items }}"
+  when: server_hostname == item.key
+
+- name: Kubernetes | configs workers | loopback network configuration
+  ansible.builtin.template:
+    src: 99-loopback.conf
+    dest: "{{ kubernetes_folders.cni_plugins_config }}/99-loopback.conf"
+    mode: '0640'
+
+- name: Kubernetes | configs workers | load br_netfilter kernel module
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+    persistent: present
+
+- name: Kubernetes | configs workers | configure the br-netfilter
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: 1
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/kubernetes.conf
+  loop:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+
+# Containerd
+- name: Kubernetes | configs workers | containerd config
+  ansible.builtin.template:
+    src: containerd-config.toml.j2
+    dest: "{{ kubernetes_folders.containerd }}/containerd-config.toml"
+    mode: '0640'
+
+# Services
+- name: Kubernetes | config workers | copy unit files
+  ansible.builtin.template:
+    src: "units/{{ item }}.service.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
+    mode: '0640'
+  loop:
+    - containerd
+    - kubelet
+    - kube-proxy
+
+- name: Kubernetes | config workers | start services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  timeout: 180
+  retries: 3
+  loop:
+    - containerd
+    - kubelet
+    - kube-proxy
+
+- name: Kubernetes | config workers | Remove "not-ready" taint from worker nodes
+  delegate_to: localhost
+  become: false
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes_certificates_location }}/admin.kubeconfig"
+    api_version: v1
+    kind: Node
+    name: "{{ server_hostname }}"
+    merge_type: strategic-merge
+    definition:
+      spec:
+        taints: []

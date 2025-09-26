@@ -1,0 +1,97 @@
+# Folders
+- name: Kubernetes | config servers | create folders
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0750'
+  loop:
+    - "{{ kubernetes_folders.api_server }}"
+    - "{{ kubernetes_folders.config }}"
+    - "{{ kubernetes_folders.cni_plugins_config }}"
+
+# Data encryption
+- name: Kubernetes | config servers | create data encryption variable
+  delegate_to: localhost
+  run_once: true
+  become: false
+  ansible.builtin.set_fact:
+    kubernetes_data_encryption: "{{ lookup('community.general.random_string', length=32, base64=True) }}"
+
+- name: Kubernetes | config servers | copy data encryption config
+  ansible.builtin.template:
+    src: encryption-config.yaml.j2
+    dest: "{{ kubernetes_folders.api_server }}/encryption-config.yaml"
+    mode: '0640'
+    force: false # Be careful, instead of updating the encryption file every time, we just check if it exists
+
+# Kubeconfigs
+- name: Kubernetes | config servers | create kubeconfigs
+  ansible.builtin.template:
+    src: kubeconfig.j2
+    dest: "{{ kubernetes_folders.api_server }}/{{ item.value.name }}.kubeconfig"
+    mode: '644'
+  loop: "{{ kubernetes_components_internal | dict2items }}"
+  when: >
+    item.value.name == 'kube-controller-manager' or
+    item.value.name == 'kube-scheduler'
+
+- name: Kubernetes | config servers | copy kuber-scheduler config
+  ansible.builtin.template:
+    src: kube-scheduler.yaml.j2
+    dest: "{{ kubernetes_folders.config }}/kube-scheduler.yaml"
+    mode: '0640'
+
+# Certificates
+- name: Kubernetes | config servers | copy certificates
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_folders.api_server }}"
+    mode: '0640'
+  loop:
+    - "{{ kubernetes_certificates.ca.crt }}"
+    - "{{ kubernetes_certificates.ca.key }}"
+    - "{{ kubernetes_certificates.service_accounts.crt }}"
+    - "{{ kubernetes_certificates.service_accounts.key }}"
+    - "{{ kubernetes_certificates.kube_api_server.crt }}"
+    - "{{ kubernetes_certificates.kube_api_server.key }}"
+    - "{{ kubernetes_certificates.etcd_kube_api.key }}"
+    - "{{ kubernetes_certificates.etcd_kube_api.crt }}"
+
+# Services
+- name: Kubernetes | config servers | create variable with etcd nodes
+  ansible.builtin.set_fact:
+    kubernetes_etcd_nodes: >-
+      {{
+        groups['etcd'] |
+        map('extract', hostvars, 'server_hostname') |
+        map('regex_replace', '^(.*)$', 'https://\1:2379') |
+        list
+      }}
+
+- name: Kubernetes | config servers | copy unit files
+  ansible.builtin.template:
+    src: "units/{{ item }}.service.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
+    mode: '0640'
+  loop:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+- name: Kubernetes | config servers | start services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  timeout: 180
+  retries: 3
+  loop:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+# Run commands with kubectl
+- name: Kubernetes | config servers | wait some time before services start
+  ansible.builtin.pause:
+    seconds: 20

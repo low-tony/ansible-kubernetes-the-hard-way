@@ -1,0 +1,45 @@
+- name: Kubernetes | install workers | create folder for cni plugins
+  ansible.builtin.file:
+    path: "{{ kubernetes_folders.cni_plugins_bin }}"
+    state: directory
+    mode: '0750'
+
+- name: Kubernetes | install workers | download kubernetes components
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "/usr/local/bin/{{ item.split('/')[-1] }}"
+    mode: '0755'
+  loop:
+    - "{{ kubernetes_components_binaries_urls.kubelet }}"
+    - "{{ kubernetes_components_binaries_urls.kube_proxy }}"
+  retries: 3
+
+- name: Kubernetes | install workers | download runc
+  ansible.builtin.get_url:
+    url: "{{ kubernetes_components_binaries_urls.runc }}"
+    dest: "/usr/local/bin/{{ kubernetes_components_binaries_urls.runc.split('/')[-1].split('.')[0] }}"
+    mode: '0755'
+  retries: 3
+
+- name: Kubernetes | install workers | download crictl
+  ansible.builtin.unarchive:
+    src: "{{ kubernetes_components_binaries_urls.cri_tools }}"
+    dest: /usr/local/bin
+    remote_src: true
+  retries: 3
+
+- name: Kubernetes | install workers | download containerd tools
+  ansible.builtin.unarchive:
+    src: "{{ kubernetes_components_binaries_urls.containerd }}"
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+  retries: 3
+
+- name: Kubernetes | install workers | download cni plugins tools
+  ansible.builtin.unarchive:
+    src: "{{ kubernetes_components_binaries_urls.cni_plugins }}"
+    dest: "{{ kubernetes_folders.cni_plugins_bin }}"
+    remote_src: true
+  retries: 3

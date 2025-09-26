@@ -1,0 +1,112 @@
+kubernetes_components_versions:
+  kubectl: 1.34.1
+  kube_apiserver: 1.34.1
+  kube_controller_manager: 1.34.1
+  kube_scheduler: 1.34.1
+  kube_proxy: 1.34.1
+  kubelet: 1.34.1
+  cri_tools: 1.34.0
+  runc: 1.4.0-rc.1
+  cni_plugins: 1.8.0
+  containerd: 2.1.4
+
+kubernetes_components_binaries_urls:
+  kubectl: https://dl.k8s.io/v{{ kubernetes_components_versions.kubectl }}/bin/{{ ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kubectl
+  kube_apiserver: >-
+    https://dl.k8s.io/v{{ kubernetes_components_versions.kube_apiserver }}/bin/{{
+    ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kube-apiserver
+  kube_controller_manager: >-
+    https://dl.k8s.io/v{{ kubernetes_components_versions.kube_controller_manager }}/bin/{{
+    ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kube-controller-manager
+  kube_scheduler: >-
+    https://dl.k8s.io/v{{ kubernetes_components_versions.kube_scheduler }}/bin/{{
+    ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kube-scheduler
+  kube_proxy: >-
+    https://dl.k8s.io/v{{ kubernetes_components_versions.kube_proxy }}/bin/{{
+    ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kube-proxy
+  kubelet: https://dl.k8s.io/v{{ kubernetes_components_versions.kubelet }}/bin/{{ ansible_system | lower }}/{{ arch_map[ansible_architecture] }}/kubelet
+  cri_tools: >-
+    https://github.com/kubernetes-sigs/cri-tools/releases/download/v{{ kubernetes_components_versions.cri_tools }}/crictl-v{{
+    kubernetes_components_versions.cri_tools }}-{{ ansible_system | lower }}-{{ arch_map[ansible_architecture] }}.tar.gz
+  runc: https://github.com/opencontainers/runc/releases/download/v{{ kubernetes_components_versions.runc }}/runc.{{ arch_map[ansible_architecture] }}
+  cni_plugins: >-
+    https://github.com/containernetworking/plugins/releases/download/v{{ kubernetes_components_versions.cni_plugins }}/cni-plugins-{{
+    ansible_system | lower }}-{{ arch_map[ansible_architecture] }}-v{{ kubernetes_components_versions.cni_plugins }}.tgz
+  containerd: >-
+    https://github.com/containerd/containerd/releases/download/v{{ kubernetes_components_versions.containerd }}/containerd-{{
+    kubernetes_components_versions.containerd }}-{{ ansible_system | lower }}-{{ arch_map[ansible_architecture] }}.tar.gz
+
+kubernetes_cluster:
+  name: test-cluster
+  domain: kubernetes.local
+  endpoint: server
+  port: 16443
+  service_cidr: 10.32.0.0/24
+  pod_cidr: 10.200.0.0/16
+  ports: 30000-32767
+
+kubernetes_certificates_location: "{{ playbook_dir }}/files"
+kubernetes_certificates:
+  ca:
+    crt: "{{ kubernetes_certificates_location }}/ca.crt"
+    key: "{{ kubernetes_certificates_location }}/ca.key"
+  kube_api_server:
+    crt: "{{ kubernetes_certificates_location }}/kube-api-server.crt"
+    key: "{{ kubernetes_certificates_location }}/kube-api-server.key"
+  kube_controller_manager:
+    crt: "{{ kubernetes_certificates_location }}/kube-controller-manager.crt"
+    key: "{{ kubernetes_certificates_location }}/kube-controller-manager.key"
+  kube_proxy:
+    crt: "{{ kubernetes_certificates_location }}/kube-proxy.crt"
+    key: "{{ kubernetes_certificates_location }}/kube-proxy.key"
+  kube_scheduler:
+    crt: "{{ kubernetes_certificates_location }}/kube-scheduler.crt"
+    key: "{{ kubernetes_certificates_location }}/kube-scheduler.key"
+  admin:
+    crt: "{{ kubernetes_certificates_location }}/admin.crt"
+    key: "{{ kubernetes_certificates_location }}/admin.key"
+  service_accounts:
+    crt: "{{ kubernetes_certificates_location }}/service-accounts.crt"
+    key: "{{ kubernetes_certificates_location }}/service-accounts.key"
+  etcd_kube_api:
+    crt: "{{ kubernetes_certificates_location }}/etcd-kube-api.crt"
+    key: "{{ kubernetes_certificates_location }}/etcd-kube-api.key"
+  # Worker nodes and etcd client certificates should be created dynamically with 'certififcates' role
+
+kubernetes_folders:
+  config: /etc/kubernetes/config
+  api_server: /var/lib/kubernetes
+  run: /var/run/kubernetes
+  kubelet: /var/lib/kubelet
+  kube_proxy: /var/lib/kube-proxy
+  cni_plugins_bin: /opt/cni/bin
+  cni_plugins_config: /etc/cni/net.d
+  containerd: /etc/containerd
+
+kubernetes_components_internal:
+  kube_proxy:
+    name: kube-proxy
+    kubeconfig:
+      user: system:kube-proxy
+      crt_local_path: "{{ kubernetes_certificates.kube_proxy.crt }}"
+      key_local_path: "{{ kubernetes_certificates.kube_proxy.key }}"
+  kube_controller_manager:
+    name: kube-controller-manager
+    kubeconfig:
+      user: system:kube-controller-manager
+      crt_local_path: "{{ kubernetes_certificates.kube_controller_manager.crt }}"
+      key_local_path: "{{ kubernetes_certificates.kube_controller_manager.key }}"
+  kube_scheduler:
+    name: kube-scheduler
+    kubeconfig:
+      user: system:kube-scheduler
+      crt_local_path: "{{ kubernetes_certificates.kube_scheduler.crt }}"
+      key_local_path: "{{ kubernetes_certificates.kube_scheduler.key }}"
+  admin:
+    name: admin
+    kubeconfig:
+      user: admin
+      crt_local_path: "{{ kubernetes_certificates.admin.crt }}"
+      key_local_path: "{{ kubernetes_certificates.admin.key }}"
+  kubelet:
+    name: kubelet

@@ -39,3 +39,11 @@
   gather_facts: false
   roles:
     - etcd
+
+- name: Kubernetes install
+  gather_facts: false
+  hosts:
+    - servers
+    - workers
+  roles:
+    - kubernetes

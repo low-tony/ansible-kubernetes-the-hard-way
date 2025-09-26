@@ -1,0 +1,41 @@
+- name: Kubernetes | routing | flush network variables
+  ansible.builtin.set_fact:
+    kubernetes_host_interface: ""
+    kubernetes_routing: []
+
+- name: Kubernetes | create routing table
+  ansible.builtin.set_fact:
+    kubernetes_routing: >-
+      {{
+        kubernetes_routing | default([]) +
+        [{
+          'ip': hostvars[worker].server_ip,
+          'subnet': kubernetes_cluster.pod_cidr | ansible.utils.ipsubnet(24, ansible_loop.index0)
+        }]
+      }}
+  loop: "{{ groups['workers'] }}"
+  when: hostvars[worker].server_ip != server_ip
+  loop_control:
+    loop_var: worker
+    extended: true
+    extended_allitems: false
+
+- name: Kubernetes | routing | get network interface with defined ip
+  ansible.builtin.set_fact:
+    kubernetes_host_interface: >-
+      {{
+        ansible_facts
+        | dict2items
+        | selectattr('value.ipv4.address', 'defined')
+        | selectattr('value.ipv4.address', 'equalto', server_ip | default(ansible_host))
+        | map(attribute='key')
+        | first
+      }}
+
+- name: Kubernetes | routing | set routes
+  ansible.builtin.command: "ip route add {{ item.subnet }} via {{ item.ip }} dev {{ kubernetes_host_interface }}"
+  loop: "{{ kubernetes_routing }}"
+  register: _kubernetes_route_add
+  failed_when: _kubernetes_route_add.rc not in [0, 2]
+  tags:
+    - skip_ansible_lint

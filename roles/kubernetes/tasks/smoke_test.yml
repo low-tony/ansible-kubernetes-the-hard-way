@@ -1,0 +1,138 @@
+# Secret creation
+- name: Kubernetes | smoke test | create secret
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ansible
+        namespace: default
+      type: Opaque
+      data:
+        mykey: "{{ 'mydata' | b64encode }}"
+
+- name: Kubernetes | smoke test | get secret from etcd
+  delegate_to: "{{ inventory_hostname }}"
+  become: true
+  ansible.builtin.shell:
+    chdir: "{{ kubernetes_folders.api_server }}"
+    cmd: |
+      etcdctl \
+        --endpoints=https://{{ server_hostname }}:2379 \
+        --cacert={{ kubernetes_certificates.ca.crt | basename }} \
+        --cert={{ kubernetes_certificates.etcd_kube_api.crt | basename }} \
+        --key={{ kubernetes_certificates.etcd_kube_api.key | basename }} \
+      get /registry/secrets/default/ansible \
+      | base64
+  register: _kubernetes_smoke_test_secret
+  failed_when: |
+    'k8s:enc:aescbc:v1:key1' not in _kubernetes_smoke_test_secret.stdout | b64decode
+  when: inventory_hostname in groups['servers']
+  tags:
+    - skip_ansible_lint
+
+# Test Nginx deployment
+- name: Kubernetes | smoke test | create Nginx service
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx-service
+        namespace: default
+      spec:
+        type: NodePort
+        selector:
+          app: nginx
+        ports:
+          - protocol: TCP
+            port: 80
+            targetPort: 80
+            nodePort: 30080
+
+- name: Kubernetes | smoke test | create Nginx deployment
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx
+        namespace: default
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: nginx
+        template:
+          metadata:
+            labels:
+              app: nginx
+          spec:
+            nodeSelector:
+              kubernetes.io/hostname: "{{ hostvars[groups['workers'][0]].server_hostname }}"
+            containers:
+              - name: nginx
+                image: nginx:latest
+                ports:
+                  - containerPort: 80
+
+- name: Kubernetes | smoke test | wait until Nginx deployment will be ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
+    api_version: apps/v1
+    kind: Deployment
+    name: nginx
+    namespace: default
+  register: _kubernetes_test_deployment_nginx_info
+  until: >
+    _kubernetes_test_deployment_nginx_info.resources[0].status.readyReplicas | default(0)
+    >= _kubernetes_test_deployment_nginx_info.resources[0].spec.replicas | default(1)
+  retries: 30
+  delay: 10
+
+- name: Kubernetes | smoke test | wait until Nginx pod is ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
+    api_version: v1
+    kind: Pod
+    namespace: default
+    label_selectors:
+      - app=nginx
+  register: _kubernetes_test_pods_nginx_info
+  until: >
+    _kubernetes_test_pods_nginx_info.resources | length > 0 and
+    _kubernetes_test_pods_nginx_info.resources
+      | map(attribute='status.conditions')
+      | map('selectattr', 'type', 'equalto', 'Ready')
+      | map('map', attribute='status')
+      | map('first')
+      | list
+      | select('equalto', 'True')
+      | list
+      | length == _kubernetes_test_pods_nginx_info.resources | length
+  retries: 30
+  delay: 10
+
+- name: Kubernetes | smoke test | check if Nginx is accessible on localhost from Vagrant vm
+  ansible.builtin.uri:
+    url: http://localhost:8080
+    return_content: true
+  register: _kubernetes_test_pod_nginx
+  failed_when: |
+    _kubernetes_test_pod_nginx is failed or 'Welcome to nginx!' not in _kubernetes_test_pod_nginx.content
+
+# Get Nginx logs
+- name: Kubernetes | smoke test | get logs from the Nginx pod
+  kubernetes.core.k8s_log:
+    namespace: default
+    label_selectors:
+      - app=nginx
+  register: _kubernetes_test_pod_nginx_logs
+  failed_when: |
+    _kubernetes_test_pod_nginx_logs is failed or 'ansible-httpget' not in _kubernetes_test_pod_nginx_logs.log

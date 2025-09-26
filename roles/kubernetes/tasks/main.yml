@@ -1,0 +1,124 @@
+- name: Kubernetes | gather facts
+  become: true
+  ansible.builtin.setup:
+  tags:
+    - kubernetes
+    - kubernetes_install_servers
+    - kubernetes_install_workers
+    - kubernetes_routing
+
+# Routing
+- name: Server | import routing
+  become: true
+  ansible.builtin.import_tasks:
+    file: routing.yml
+  tags:
+    - kubernetes
+    - kubernetes_routing
+
+# Localhost
+- name: Kubernetes | create admin kubeconfig
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.template:
+    src: kubeconfig.j2
+    dest: "{{ kubernetes_certificates_location }}/admin.kubeconfig"
+    mode: '600'
+  loop: "{{ {'admin': kubernetes_components_internal.admin} | dict2items }}"
+  tags:
+    - kubernetes
+    - kubernetes_config_servers
+    - kubernetes_config_api
+    - kubernetes_test
+
+# Servers
+- name: Kubernetes | import servers install
+  become: true
+  ansible.builtin.import_tasks:
+    file: install_servers.yml
+  when: inventory_hostname in groups['servers']
+  tags:
+    - kubernetes
+    - kubernetes_install_servers
+
+- name: Kubernetes | import servers config
+  become: true
+  ansible.builtin.import_tasks:
+    file: config_servers.yml
+  when: inventory_hostname in groups['servers']
+  tags:
+    - kubernetes
+    - kubernetes_config_servers
+
+# Alternative for 'kubectl apply -f kube-apiserver-to-kubelet.yaml' from repo
+# https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/08-bootstrapping-kubernetes-controllers.md#rbac-for-kubelet-authorization
+- name: Kubernetes | import servers config with API
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.import_tasks:
+    file: config_api.yml
+  vars:
+    kubernetes_kubeconfig_admin_path: "{{ kubernetes_certificates_location }}/admin.kubeconfig"
+  tags:
+    - kubernetes
+    - kubernetes_config_api
+
+# Workers
+- name: Kubernetes | import install
+  become: true
+  ansible.builtin.import_tasks:
+    file: install_workers.yml
+  when: inventory_hostname in groups['workers']
+  tags:
+    - kubernetes
+    - kubernetes_install_workers
+
+- name: Kubernetes | create variables for worker nodes
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    kubernetes_components_nodes: >-
+      {{
+        kubernetes_components_nodes | default({}) |
+        combine({
+          hostvars[item].server_hostname: {
+            'name': hostvars[item].server_hostname,
+            'kubeconfig': {
+              'user': 'system:node:' + hostvars[item].server_hostname,
+              'crt_local_path': kubernetes_certificates_location + '/' + hostvars[item].server_hostname + '.crt',
+              'key_local_path': kubernetes_certificates_location + '/' + hostvars[item].server_hostname + '.key'
+            },
+            'subnet': kubernetes_cluster.pod_cidr | ansible.utils.ipsubnet(24, ansible_loop.index0),
+          }
+        })
+      }}
+  loop: "{{ groups['workers'] }}"
+  loop_control:
+    extended: true
+    extended_allitems: false
+  tags:
+    - kubernetes
+    - kubernetes_config_workers
+
+- name: Kubernetes | import workers config
+  become: true
+  ansible.builtin.import_tasks:
+    file: config_workers.yml
+  when: inventory_hostname in groups['workers']
+  vars:
+    kubernetes_kubeconfig_admin_path: "{{ kubernetes_certificates_location }}/admin.kubeconfig"
+  tags:
+    - kubernetes
+    - kubernetes_config_workers
+
+# Smoke test
+- name: Server | import smoke test
+  delegate_to: localhost
+  run_once: true
+  ansible.builtin.import_tasks:
+    file: smoke_test.yml
+  vars:
+    kubernetes_kubeconfig_admin_path: "{{ kubernetes_certificates_location }}/admin.kubeconfig"
+  tags:
+    - kubernetes
+    - kubernetes_test
