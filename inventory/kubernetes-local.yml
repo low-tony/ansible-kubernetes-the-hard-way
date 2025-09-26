@@ -9,6 +9,7 @@ servers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/server_0/virtualbox/private_key
       ansible_port: 20010
       # Roles vars
       server_hostname: server-0
@@ -19,6 +20,7 @@ servers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/server_1/virtualbox/private_key
       ansible_port: 20011
       # Roles vars
       server_hostname: server-1
@@ -29,6 +31,7 @@ servers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/server_2/virtualbox/private_key
       ansible_port: 20012
       # Roles vars
       server_hostname: server-2
@@ -42,6 +45,7 @@ workers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/worker_0/virtualbox/private_key
       ansible_port: 20020
       # Roles vars
       server_hostname: node-0
@@ -52,6 +56,7 @@ workers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/worker_1/virtualbox/private_key
       ansible_port: 20021
       # Roles vars
       server_hostname: node-1
@@ -62,6 +67,7 @@ workers:
       ansible_host: localhost
       ansible_user: vagrant
       ansible_host_key_checking: false
+      ansible_private_key_file: .vagrant/machines/worker_2/virtualbox/private_key
       ansible_port: 20022
       # Roles vars
       server_hostname: node-2
