@@ -130,6 +130,7 @@
 # Get Nginx logs
 - name: Kubernetes | smoke test | get logs from the Nginx pod
   kubernetes.core.k8s_log:
+    kubeconfig: "{{ kubernetes_kubeconfig_admin_path }}"
     namespace: default
     label_selectors:
       - app=nginx
