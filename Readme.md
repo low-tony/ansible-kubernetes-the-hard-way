@@ -17,7 +17,6 @@ This project simplifies the original manual steps while preserving the education
 - [Running the Cluster](#running-the-cluster)
 - [Certificates](#certificates)
 - [Cluster Access](#cluster-access)
-- [License](#license)
 
 ---
 
@@ -100,5 +99,3 @@ kubectl --kubeconfig files/admin.kubeconfig get pods
 - **Kubernetes API:** https://127.0.0.1:16443
 - **First Vagrant node ports:** 8080 and 8443
 - **Nginx pod available at:** http://localhost:8080
-
----
