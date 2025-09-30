@@ -6,9 +6,7 @@
 
 Automated deployment of **Kubernetes The Hard Way** using **Ansible** + **Vagrant** + **VirtualBox**.  
 This project simplifies the original manual steps while preserving the educational experience.
-
----
-
+![Vagrant K8s Cluster](docs/diagram.png)
 ## Table of Contents
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
