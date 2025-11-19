@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
       app.vm.network "forwarded_port", guest: 22, host: 20010, id: "server-0-ssh", auto_correct: false
       app.vm.network "forwarded_port", guest: 16443, host: 16443, id: "kubernetes-api", auto_correct: false
       app.vm.provider "virtualbox" do |vb|
-        vb.memory = 1024
+        vb.memory = 1536
         vb.cpus = 1
       end
     end
@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
       app.vm.network "private_network", ip: "192.168.56.11"
       app.vm.network "forwarded_port", guest: 22, host: 20011, id: "server-1-ssh", auto_correct: false
       app.vm.provider "virtualbox" do |vb|
-        vb.memory = 1024
+        vb.memory = 1536
         vb.cpus = 1
       end
     end
@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
       app.vm.network "private_network", ip: "192.168.56.12"
       app.vm.network "forwarded_port", guest: 22, host: 20012, id: "server-2-ssh", auto_correct: false
       app.vm.provider "virtualbox" do |vb|
-        vb.memory = 1024
+        vb.memory = 1536
         vb.cpus = 1
       end
     end
